@@ -3,6 +3,7 @@ package com.whiteclarkegroup.liquibaselinter;
 import com.google.common.collect.ImmutableSet;
 import com.whiteclarkegroup.liquibaselinter.config.Config;
 import com.whiteclarkegroup.liquibaselinter.config.rules.RuleRunner;
+import com.whiteclarkegroup.liquibaselinter.report.ReportItem;
 import com.whiteclarkegroup.liquibaselinter.resolvers.ChangeSetParameterResolver;
 import com.whiteclarkegroup.liquibaselinter.resolvers.DefaultConfigParameterResolver;
 import com.whiteclarkegroup.liquibaselinter.resolvers.RuleRunnerParameterResolver;
@@ -22,7 +23,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
+import static com.whiteclarkegroup.liquibaselinter.report.ReportItem.ReportItemType.IGNORED;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -57,7 +60,8 @@ class ChangeLogLinterTest {
         addChangeToChangeSet(changeSet, new AddColumnChange(), new AddColumnChange());
 
         changeLogLinter.lintChangeLog(databaseChangeLog, config, ruleRunner);
-        assertThat(ruleRunner.buildReport().getItems()).extracting("type").contains(IGNORED);
+        List<ReportItem.ReportItemType> collect = ruleRunner.buildReport().getItems().stream().map(ReportItem::getType).collect(Collectors.toList());
+        assertThat(collect).asList().contains(IGNORED);
     }
 
     @DisplayName("Should not fall over on null comment")

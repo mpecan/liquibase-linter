@@ -5,7 +5,7 @@ import com.whiteclarkegroup.liquibaselinter.resolvers.LiquibaseIntegrationTestRe
 import com.whiteclarkegroup.liquibaselinter.resolvers.LiquibaseLinterIntegrationTest;
 import liquibase.Contexts;
 import liquibase.Liquibase;
-import liquibase.exception.ChangeLogParseException;
+import liquibase.exception.CommandExecutionException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -18,8 +18,8 @@ class FileNameNoSpacesIntegrationTest extends LinterIntegrationTest {
     @DisplayName("Should not allow file name with spaces")
     @LiquibaseLinterIntegrationTest(changeLogFile = "file-name-no-spaces/file-name no-spaces.xml", configFile = "file-name-no-spaces/file-name-no-spaces.json")
     void shouldNotAllowFileNameWithSpaces(Liquibase liquibase) {
-        ChangeLogParseException changeLogParseException =
-            assertThrows(ChangeLogParseException.class, () -> liquibase.update(new Contexts(), CharStreams.nullWriter()));
+        CommandExecutionException changeLogParseException =
+            assertThrows(CommandExecutionException.class, () -> liquibase.update(new Contexts(), CharStreams.nullWriter()));
         assertTrue(changeLogParseException.getMessage().contains("integration/file-name-no-spaces/file-name no-spaces.xml -- Message: Changelog filenames should not contain spaces"));
     }
 

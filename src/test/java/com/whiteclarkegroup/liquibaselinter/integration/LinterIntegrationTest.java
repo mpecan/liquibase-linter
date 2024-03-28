@@ -5,6 +5,7 @@ import com.whiteclarkegroup.liquibaselinter.resolvers.LiquibaseIntegrationTestRe
 import liquibase.Contexts;
 import liquibase.Liquibase;
 import liquibase.exception.ChangeLogParseException;
+import liquibase.exception.CommandExecutionException;
 import liquibase.parser.ChangeLogParserFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DynamicTest;
@@ -28,15 +29,16 @@ abstract class LinterIntegrationTest {
     Stream<DynamicTest> dynamicTests() {
         registerTests();
         ThrowingConsumer<IntegrationTestConfig> testExecutor = running -> {
-            final Liquibase liquibase = LiquibaseIntegrationTestResolver.buildLiquibase(running.getChangeLogFile(), running.getConfigFile());
-            final Writer nullWriter = CharStreams.nullWriter();
-            final Contexts contexts = new Contexts();
-            if (running.getMessage() != null) {
-                assertThatExceptionOfType(ChangeLogParseException.class)
-                    .isThrownBy(() -> liquibase.update(contexts, nullWriter))
-                    .withMessageContaining(running.getMessage());
-            } else {
-                liquibase.update(contexts, nullWriter);
+            try (Liquibase liquibase = LiquibaseIntegrationTestResolver.buildLiquibase(running.getChangeLogFile(), running.getConfigFile())) {
+                final Writer nullWriter = CharStreams.nullWriter();
+                final Contexts contexts = new Contexts();
+                if (running.getMessage() != null) {
+                    assertThatExceptionOfType(CommandExecutionException.class)
+                            .isThrownBy(() -> liquibase.update(contexts, nullWriter))
+                            .withMessageContaining(running.getMessage()).withCauseInstanceOf(ChangeLogParseException.class);
+                } else {
+                    liquibase.update(contexts, nullWriter);
+                }
             }
         };
         return DynamicTest.stream(tests.iterator(), IntegrationTestConfig::getDisplayName, testExecutor);
